@@ -6,13 +6,15 @@ FileGroup2=Default Group
 Group=Default Group
 Library1=cameraview
 Library2=core
-Library3=runtimepermissions
-Library4=sensorextender
+Library3=keyvaluestore
+Library4=runtimepermissions
+Library5=sensorextender
+Library6=b4xdrawer
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="29"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~AddPermission(android.permission.CAMERA)~\n~AddPermission(android.permission.RECORD_AUDIO)
 Module1=Help
 Module2=Starter
 NumberOfFiles=2
-NumberOfLibraries=4
+NumberOfLibraries=6
 NumberOfModules=2
 Version=10.6
 @EndOfDesignText@
@@ -35,12 +37,16 @@ Sub Process_Globals
 	'These variables can be accessed from all modules.
 	Private FotoTimer As Timer
 	Public NumeroFotoPrese As Int
+	Public PathSessione As String
 	Public MyFolder As String
+	Public Frequenza As Float
 End Sub
 
 Sub Globals
 	'These global variables will be redeclared each time the activity is created.
 	'These variables can only be accessed from this module.
+
+	Public kvs As KeyValueStore
 
 	Private rp As RuntimePermissions
 	Private cam As CameraView
@@ -52,7 +58,7 @@ Sub Globals
 	Private StringaStato As String
 	Private btnHelp As Button
 
-	Dim pa, pm As SensorExtender
+	Dim Pa, pm As SensorExtender
 	Dim rACC(3) As Float
 	Dim Ready As Boolean
 
@@ -63,20 +69,35 @@ End Sub
 Sub Activity_Create(FirstTime As Boolean)
 	'Do not forget to load the layout file created with the visual designer. For example:
 	Activity.LoadLayout("Layout")
+	PathSessione = ""
 	MyFolder = rp.GetSafeDirDefaultExternal("prove")
+	kvs.Initialize(File.DirInternal, "FotoOrientate.ini")
+	Frequenza = kvs.GetDefault("Frequenza", 1)
+	
 	StringaStato=""
 	Label1.Text=StringaStato
 	'Label1.color = Colors.argb(128,0,0,144)
 	cam.Facing = "BACK"		' oppure "FRONT"
 	cam.setSessionVideo
-	FotoTimer.Initialize("FotoTimer",1000)
+	FotoTimer.Initialize("FotoTimer", 1000*1/Frequenza)
 	FotoTimer.Enabled=False
 	CicloFoto=False
 
-	pa.Initialize2(pa.TYPE_ACCELEROMETER,3)
-	pm.Initialize2(pa.TYPE_MAGNETIC_FIELD,3)
+	Pa.Initialize2(Pa.TYPE_ACCELEROMETER,3)
+	pm.Initialize2(Pa.TYPE_MAGNETIC_FIELD,3)
 	
 End Sub
+
+Public Sub ImpostaFrequenza(freq As Float)
+	Frequenza = freq
+	If Frequenza < 0.1 Or Frequenza > 10 Then
+		Frequenza = 1
+	End If
+	Dim f As String = Frequenza
+	'Msgbox2Async("Nuova frequenza:" & f,"Test","Ok","","",Null,False)
+	kvs.Put("Frequenza", f)
+End Sub
+
 Sub FotoTimer_Tick
 	' cicla le foto
 	btnSnapshot_Click
@@ -97,15 +118,21 @@ Sub Cam_onOrientationChanged(orientation As Int)
 	Log($"Cam_onOrientationChanged(${orientation})"$)
 End Sub
 Sub Cam_onPictureTaken(jpeg() As Byte)
+	DateTime.DateFormat="yyyy-MM-dd_HH-mm-ss.SSS"
+	If NumeroFotoPrese = 0 Then
+		PathSessione = DateTime.Date(DateTime.Now) 
+		File.MakeDir(MyFolder, PathSessione)
+		PathSessione = "/" & PathSessione
+		'MsgboxAsync(PathSessione,"Directory calcolata")
+	End If
 	NumeroFotoPrese=NumeroFotoPrese+1
 	Log($"Cam_onPictureTaken(): "$& NumeroFotoPrese)
 	Dim filename As String
-	DateTime.DateFormat="yyyy-MM-dd"
-	filename = "test" & DateTime.Date(DateTime.Now) & " " & DateTime.Time(DateTime.Now) & ".jpg"
+	filename = "test" & DateTime.Date(DateTime.Now) & ".jpg"
 	Log($"Nome file: ${filename}"$)
-	BytesToFile(MyFolder,filename,jpeg)
+	BytesToFile(MyFolder & PathSessione,filename,jpeg)
 	Dim writer As TextWriter
-	writer.Initialize(File.OpenOutput(MyFolder,"elenco-foto.txt",True))
+	writer.Initialize(File.OpenOutput(MyFolder & PathSessione,"elenco-foto.txt",True))
 	Dim riga As String
 	riga=filename &","& NumeroFotoPrese &","  & NumberFormat(ORi(0),0,2) & ", " & NumberFormat(ORi(1),0,2) & ", " & NumberFormat(ORi(2),0,2) '&","& NumberFormat(rACC(0),0,2) & ", " & NumberFormat(rACC(1),0,2) & ", " & NumberFormat(rACC(2),0,2)
 	writer.WriteLine(riga)
@@ -122,6 +149,7 @@ Sub Cam_onZoomChanged(newValue As Float, bounds() As Float, fingers() As Object)
 End Sub
 
 Sub AttivaCicloFoto()
+	FotoTimer.Initialize("FotoTimer", (1000*1/Frequenza))
 	CicloFoto=True
 	FotoTimer.Enabled=True
 End Sub
@@ -136,7 +164,7 @@ Sub Activity_Resume
 		FotoTimer.Enabled=True
 	End If
 
-	pa.StartListening("MF")
+	Pa.StartListening("MF")
 	pm.StartListening("MF")
 	Ready = False
 
@@ -148,7 +176,7 @@ Sub Activity_Pause (UserClosed As Boolean)
 	cam.pause
 
 	pm.StopListening
-	pa.StopListening
+	Pa.StopListening
 End Sub
 
 

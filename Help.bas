@@ -23,6 +23,7 @@ Sub Globals
 
 	Private lblPath As Label
 	Private Label6 As Label
+	Private txtFrequenza As EditText
 End Sub
 
 
@@ -32,6 +33,7 @@ Sub Activity_Create(FirstTime As Boolean)
 	Activity.LoadLayout("Layout1")
 	lblPath.Text=Main.MyFolder
 	Label6.Text="I campi sono separati da virgole"& CRLF &"1) nome file con data e ora"& CRLF &"2) numero foto nella sessione"& CRLF &"3) yaw"& CRLF &"4) roll"& CRLF &"5) pitch"
+	txtFrequenza.Text = Main.Frequenza
 End Sub
 
 Sub Activity_Resume
@@ -44,6 +46,8 @@ End Sub
 
 
 Private Sub Button1_Click
-	StartActivity("Main")
+	Dim l As Float=txtFrequenza.Text
+	CallSubDelayed2(Main, "ImpostaFrequenza", l)
 	Activity.Finish
+	StartActivity("Main")
 End Sub

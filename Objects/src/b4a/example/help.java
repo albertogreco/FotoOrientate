@@ -339,6 +339,7 @@ public anywheresoftware.b4a.keywords.Common __c = null;
 public anywheresoftware.b4a.objects.ButtonWrapper _button1 = null;
 public anywheresoftware.b4a.objects.LabelWrapper _lblpath = null;
 public anywheresoftware.b4a.objects.LabelWrapper _label6 = null;
+public anywheresoftware.b4a.objects.EditTextWrapper _txtfrequenza = null;
 public b4a.example.main _main = null;
 public b4a.example.starter _starter = null;
 
@@ -350,33 +351,40 @@ public static void initializeProcessGlobals() {
             }
 }
 public static String  _activity_create(boolean _firsttime) throws Exception{
- //BA.debugLineNum = 23;BA.debugLine="Sub Activity_Create(FirstTime As Boolean)";
- //BA.debugLineNum = 26;BA.debugLine="Activity.LoadLayout(\"Layout1\")";
+ //BA.debugLineNum = 24;BA.debugLine="Sub Activity_Create(FirstTime As Boolean)";
+ //BA.debugLineNum = 27;BA.debugLine="Activity.LoadLayout(\"Layout1\")";
 mostCurrent._activity.LoadLayout("Layout1",mostCurrent.activityBA);
- //BA.debugLineNum = 27;BA.debugLine="lblPath.Text=Main.MyFolder";
+ //BA.debugLineNum = 28;BA.debugLine="lblPath.Text=Main.MyFolder";
 mostCurrent._lblpath.setText(BA.ObjectToCharSequence(mostCurrent._main._myfolder /*String*/ ));
- //BA.debugLineNum = 28;BA.debugLine="Label6.Text=\"I campi sono separati da virgole\"& C";
+ //BA.debugLineNum = 29;BA.debugLine="Label6.Text=\"I campi sono separati da virgole\"& C";
 mostCurrent._label6.setText(BA.ObjectToCharSequence("I campi sono separati da virgole"+anywheresoftware.b4a.keywords.Common.CRLF+"1) nome file con data e ora"+anywheresoftware.b4a.keywords.Common.CRLF+"2) numero foto nella sessione"+anywheresoftware.b4a.keywords.Common.CRLF+"3) yaw"+anywheresoftware.b4a.keywords.Common.CRLF+"4) roll"+anywheresoftware.b4a.keywords.Common.CRLF+"5) pitch"));
- //BA.debugLineNum = 29;BA.debugLine="End Sub";
+ //BA.debugLineNum = 30;BA.debugLine="txtFrequenza.Text = Main.Frequenza";
+mostCurrent._txtfrequenza.setText(BA.ObjectToCharSequence(mostCurrent._main._frequenza /*float*/ ));
+ //BA.debugLineNum = 31;BA.debugLine="End Sub";
 return "";
 }
 public static String  _activity_pause(boolean _userclosed) throws Exception{
- //BA.debugLineNum = 35;BA.debugLine="Sub Activity_Pause (UserClosed As Boolean)";
- //BA.debugLineNum = 37;BA.debugLine="End Sub";
+ //BA.debugLineNum = 37;BA.debugLine="Sub Activity_Pause (UserClosed As Boolean)";
+ //BA.debugLineNum = 39;BA.debugLine="End Sub";
 return "";
 }
 public static String  _activity_resume() throws Exception{
- //BA.debugLineNum = 31;BA.debugLine="Sub Activity_Resume";
- //BA.debugLineNum = 33;BA.debugLine="End Sub";
+ //BA.debugLineNum = 33;BA.debugLine="Sub Activity_Resume";
+ //BA.debugLineNum = 35;BA.debugLine="End Sub";
 return "";
 }
 public static String  _button1_click() throws Exception{
- //BA.debugLineNum = 40;BA.debugLine="Private Sub Button1_Click";
- //BA.debugLineNum = 41;BA.debugLine="StartActivity(\"Main\")";
-anywheresoftware.b4a.keywords.Common.StartActivity(processBA,(Object)("Main"));
- //BA.debugLineNum = 42;BA.debugLine="Activity.Finish";
+float _l = 0f;
+ //BA.debugLineNum = 42;BA.debugLine="Private Sub Button1_Click";
+ //BA.debugLineNum = 43;BA.debugLine="Dim l As Float=txtFrequenza.Text";
+_l = (float)(Double.parseDouble(mostCurrent._txtfrequenza.getText()));
+ //BA.debugLineNum = 44;BA.debugLine="CallSubDelayed2(Main, \"ImpostaFrequenza\", l)";
+anywheresoftware.b4a.keywords.Common.CallSubDelayed2(processBA,(Object)(mostCurrent._main.getObject()),"ImpostaFrequenza",(Object)(_l));
+ //BA.debugLineNum = 45;BA.debugLine="Activity.Finish";
 mostCurrent._activity.Finish();
- //BA.debugLineNum = 43;BA.debugLine="End Sub";
+ //BA.debugLineNum = 46;BA.debugLine="StartActivity(\"Main\")";
+anywheresoftware.b4a.keywords.Common.StartActivity(processBA,(Object)("Main"));
+ //BA.debugLineNum = 47;BA.debugLine="End Sub";
 return "";
 }
 public static String  _globals() throws Exception{
@@ -387,7 +395,9 @@ mostCurrent._button1 = new anywheresoftware.b4a.objects.ButtonWrapper();
 mostCurrent._lblpath = new anywheresoftware.b4a.objects.LabelWrapper();
  //BA.debugLineNum = 19;BA.debugLine="Private Label6 As Label";
 mostCurrent._label6 = new anywheresoftware.b4a.objects.LabelWrapper();
- //BA.debugLineNum = 20;BA.debugLine="End Sub";
+ //BA.debugLineNum = 20;BA.debugLine="Private txtFrequenza As EditText";
+mostCurrent._txtfrequenza = new anywheresoftware.b4a.objects.EditTextWrapper();
+ //BA.debugLineNum = 21;BA.debugLine="End Sub";
 return "";
 }
 public static String  _process_globals() throws Exception{
