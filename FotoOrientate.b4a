@@ -1,0 +1,242 @@
+﻿Build1=Default,b4a.example
+File1=Layout.bal
+File2=Layout1.bal
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=cameraview
+Library2=core
+Library3=runtimepermissions
+Library4=sensorextender
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="29"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~AddPermission(android.permission.CAMERA)~\n~AddPermission(android.permission.RECORD_AUDIO)
+Module1=Help
+Module2=Starter
+NumberOfFiles=2
+NumberOfLibraries=4
+NumberOfModules=2
+Version=10.6
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: FotoOrientate
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private FotoTimer As Timer
+	Public NumeroFotoPrese As Int
+	Public MyFolder As String
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	'These variables can only be accessed from this module.
+
+	Private rp As RuntimePermissions
+	Private cam As CameraView
+	Private btnStart As Button
+	Private btnStop As Button
+	Private btnSnapshot As Button
+	Private Label1 As Label
+	Private CicloFoto As Boolean
+	Private StringaStato As String
+	Private btnHelp As Button
+
+	Dim pa, pm As SensorExtender
+	Dim rACC(3) As Float
+	Dim Ready As Boolean
+
+	Dim ORi(3) As Float
+
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Do not forget to load the layout file created with the visual designer. For example:
+	Activity.LoadLayout("Layout")
+	MyFolder = rp.GetSafeDirDefaultExternal("prove")
+	StringaStato=""
+	Label1.Text=StringaStato
+	'Label1.color = Colors.argb(128,0,0,144)
+	cam.Facing = "BACK"		' oppure "FRONT"
+	cam.setSessionVideo
+	FotoTimer.Initialize("FotoTimer",1000)
+	FotoTimer.Enabled=False
+	CicloFoto=False
+
+	pa.Initialize2(pa.TYPE_ACCELEROMETER,3)
+	pm.Initialize2(pa.TYPE_MAGNETIC_FIELD,3)
+	
+End Sub
+Sub FotoTimer_Tick
+	' cicla le foto
+	btnSnapshot_Click
+End Sub
+Sub Cam_onCameraClosed()
+	Log($"Cam_onCameraClosed()"$)
+End Sub
+Sub Cam_onCameraOpened(options As Object)
+	Log($"Cam_onCameraOpened()"$)
+End Sub
+Sub Cam_onExposureCorrectionChanged(newValue As Float, bounds() As Float, fingers() As Object)
+	Log($"Cam_onExposureCorrectionChanged(${newValue},${bounds},${fingers})"$)
+End Sub
+Sub Cam_onFocusEnd(success As Boolean, x As Int, y As Int)
+	Log($"Cam_onFocusEnd(${success},${x},${y})"$)
+End Sub
+Sub Cam_onOrientationChanged(orientation As Int)
+	Log($"Cam_onOrientationChanged(${orientation})"$)
+End Sub
+Sub Cam_onPictureTaken(jpeg() As Byte)
+	NumeroFotoPrese=NumeroFotoPrese+1
+	Log($"Cam_onPictureTaken(): "$& NumeroFotoPrese)
+	Dim filename As String
+	DateTime.DateFormat="yyyy-MM-dd"
+	filename = "test" & DateTime.Date(DateTime.Now) & " " & DateTime.Time(DateTime.Now) & ".jpg"
+	Log($"Nome file: ${filename}"$)
+	BytesToFile(MyFolder,filename,jpeg)
+	Dim writer As TextWriter
+	writer.Initialize(File.OpenOutput(MyFolder,"elenco-foto.txt",True))
+	Dim riga As String
+	riga=filename &","& NumeroFotoPrese &","  & NumberFormat(ORi(0),0,2) & ", " & NumberFormat(ORi(1),0,2) & ", " & NumberFormat(ORi(2),0,2) '&","& NumberFormat(rACC(0),0,2) & ", " & NumberFormat(rACC(1),0,2) & ", " & NumberFormat(rACC(2),0,2)
+	writer.WriteLine(riga)
+	writer.Close
+	Label1.Text=StringaStato &"Foto n:"& NumeroFotoPrese
+	cam.start
+End Sub
+Sub Cam_onVideoTaken(path As String, filename As String)
+	Log($"Cam_onVideoTaken(${path},${filename})"$)
+	cam.start
+End Sub
+Sub Cam_onZoomChanged(newValue As Float, bounds() As Float, fingers() As Object)
+	Log($"Cam_onZoomchanged(${newValue},${bounds},${fingers})"$)
+End Sub
+
+Sub AttivaCicloFoto()
+	CicloFoto=True
+	FotoTimer.Enabled=True
+End Sub
+Sub DisattivaCicloFoto()
+	FotoTimer.Enabled=False
+	CicloFoto=False
+End Sub
+Sub Activity_Resume
+	
+	cam.start
+	If CicloFoto Then
+		FotoTimer.Enabled=True
+	End If
+
+	pa.StartListening("MF")
+	pm.StartListening("MF")
+	Ready = False
+
+End Sub
+Sub Activity_Pause (UserClosed As Boolean)
+	If CicloFoto Then
+		FotoTimer.Enabled=False
+	End If
+	cam.pause
+
+	pm.StopListening
+	pa.StopListening
+End Sub
+
+
+Sub btnStart_Click
+	' inizio una sequenza di acquisizione
+	AttivaCicloFoto
+	
+	'cam.setSessionVideo
+	'cam.startCapturingVideo(File.DirRootExternal,"VideoCapture2.mp4")
+End Sub
+
+Sub btnStop_Click
+	If cam.Started Then
+		cam.stop
+	End If
+	DisattivaCicloFoto
+	
+End Sub
+
+Sub btnSnapshot_Click
+	cam.setSessionPicture
+	cam.captureSnapshot
+End Sub
+
+Public Sub ImageToBytes(Image As Bitmap) As Byte()
+	Dim out As OutputStream
+	out.InitializeToBytesArray(0)
+	Image.WriteToStream(out, 100, "JPEG")
+	out.Close
+	Return out.ToBytesArray
+End Sub
+
+Public Sub BytesToImage(bytes() As Byte) As Bitmap
+	Dim In As InputStream
+	In.InitializeFromBytesArray(bytes, 0, bytes.Length)
+	Dim bmp As Bitmap
+	bmp.Initialize2(In)
+	Return bmp
+End Sub
+
+Sub BytesToFile (Dir As String, FileName As String, Data() As Byte)
+	Dim out As OutputStream = File.OpenOutput(Dir, FileName, False)
+	out.WriteBytes(Data, 0, Data.Length)
+	out.Close
+End Sub
+
+Sub FileToBytes (Dir As String, FileName As String) As Byte()
+	Return Bit.InputStreamToBytes(File.OpenInput(Dir, FileName))
+End Sub
+
+Private Sub btnHelp_Click
+	If CicloFoto Then
+		DisattivaCicloFoto
+	End If
+	StartActivity("Help")
+End Sub
+
+Sub MF_SensorChanged(Values() As Float)
+Dim se As SensorExtender
+se = Sender
+'*********************************************************************************************
+'for more info see: http://developer.android.com/reference/android/hardware/SensorManager.html
+'*********************************************************************************************
+'added gettype(), no more lists, if your using one handler.
+Select se.GetType
+	Case se.TYPE_ACCELEROMETER
+		'isolate gravity 
+		rACC = se.LowPassFilter(Values,rACC,se.FILTERING_FACTOR_Recommended)
+		Ready = True
+
+	Case se.TYPE_MAGNETIC_FIELD
+		If Ready Then
+			Ready = False
+			Dim R(16) As Float
+			Dim i(16) As Float
+			If se.GetRotationMatrix(R,I,Values,rACC) Then
+				ORi = se.GetOrientation(R)
+				Label1.Text = "Orientamento in radianti:" & CRLF & NumberFormat(ORi(0),0,2) & ", " & NumberFormat(ORi(1),0,2) & ", " & NumberFormat(ORi(2),0,2)
+			Else
+				Label1.Text = "Errore: non riesco a leggere l'orientamento!"
+			End If
+		End If
+	End Select
+End Sub
+
+'This method has been added to enable more advanced filtering.
+Sub MF_accuracychanged(NewAccuracy As Int)
+	Dim se As SensorExtender
+	se = Sender
+	'MsgboxAsync ("New Accuracy: " & NewAccuracy & CRLF & "For Sensor: " & se.GetType , "Accuracy Changed!")
+End Sub
